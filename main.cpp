@@ -447,7 +447,7 @@ double GetTheta(Mat &src, Mat src_canny)
 
     //合并平行线
     para_line = MergeParaLine(para_line);
-    cout << para_line.size() << endl;
+    //cout << para_line.size() << endl;
 
     //计算平行线斜率角度theta    
     vector<double> k_tan;
