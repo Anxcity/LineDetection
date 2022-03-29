@@ -115,8 +115,8 @@ int main()
     Mat src = imread(path);
     Mat src_bak = src.clone();
 
-    IDENT_INTERFACE res = Interface(src, 1, 1);
-    cout << res.x << " " << res.y << " " << res.a << " " << res.b << " " << res.angel << " " << endl;
+    IDENT_INTERFACE res = Interface(src, 3, 1);
+    cout << res.target << " "<< res.x << " " << res.y << " " << res.a << " " << res.b << " " << res.angel << " " << endl;
     // vector<double> firstRes = firstDetection(src);
     // for(int i = 0; i < 3; i++)
     //     cout << firstRes[i] <<" ";
@@ -1012,6 +1012,8 @@ IDENT_INTERFACE firstDetection(Mat src, bool debug)
 
     if(debug)
     {
+        string text = "angel: " + to_string(theta) + " x: " + to_string(res.x) + " y: " + to_string(res.y);
+        putText(src_re, text, Point(100,100), FONT_HERSHEY_SIMPLEX, 2, (255,0,0), 8);
 	    rectangle(src_re, Point(region_x.first * 3, region_y.first * 3), Point(region_x.second * 3, region_y.second * 3), Scalar( 0, 0, 255), 3, 8);//绘制塔架区域
         //imwrite("first.png", src_re);
     }
@@ -1097,7 +1099,8 @@ IDENT_INTERFACE secondDetection(Mat src, bool debug)
         res.angel = 0;
 
     }
-    
+
+    auto t4 = Clock::now(); 
     if(debug)
     {
         region_x.first = region_x.first * 3 ;
@@ -1107,13 +1110,17 @@ IDENT_INTERFACE secondDetection(Mat src, bool debug)
 	    //cout<<center.first<<" "<<center.second<<endl;
         res.a = region_x.second - region_x.first;
         res.b = region_y.second - region_y.first;
+
+        string text = "angel: " + to_string(res.angel) + " x: " + to_string(res.x) + " y: " + to_string(res.y);
+        putText(src_re, text, Point(100,100), FONT_HERSHEY_SIMPLEX, 2, (255,0,0), 8);
+        
         circle( src_re, Point(center.first, center.second), 5,  Scalar(0, 0, 255), 3, 8, 0 );
 	    rectangle(src_re, Point(region_x.first, region_y.first), Point(region_x.second, region_y.second), Scalar( 0, 0, 255), 3, 8);//绘制塔架区域
         //imwrite("second.png", src_re);
         res.image = src_re;
     }
 
-    auto t4 = Clock::now(); 
+
     cout << "步骤二前置时间为：" << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e+9 <<'\n';
     cout << "步骤二塔检测时间为：" << std::chrono::duration_cast<std::chrono::nanoseconds>(t3 - t2).count() / 1e+9 <<'\n';
     cout << "步骤二线检测时间为：" << std::chrono::duration_cast<std::chrono::nanoseconds>(t4 - t3).count() / 1e+9 <<'\n';
@@ -1213,6 +1220,9 @@ IDENT_INTERFACE thirdDetection(Mat src, bool debug)
     if(debug)
     {
 	    //cout<<center.first<<" "<<center.second<<endl;
+        string text = "angel: " + to_string(res.angel) + " x: " + to_string(res.x) + " y: " + to_string(res.y);
+        putText(src_re, text, Point(100,100), FONT_HERSHEY_SIMPLEX, 2, (255,0,0), 8);
+
         circle( src_re, Point(src.cols / 2, src.rows / 2), 5,  Scalar(0, 0, 255), 3, 8, 0 );
 	    rectangle(src_re, Point(region_x.first, 10), Point(region_x.second, src.rows - 10), Scalar( 0, 0, 255), 3, 8);//绘制塔架区域
         res.image = src_re;
