@@ -969,6 +969,7 @@ IDENT_INTERFACE firstDetection(Mat src, bool debug)
 {
     //存储结果
     IDENT_INTERFACE res;
+	res.target = 1;
 
     //时间戳
 	typedef std::chrono::high_resolution_clock Clock;
@@ -1023,6 +1024,7 @@ IDENT_INTERFACE secondDetection(Mat src, bool debug)
 {
     //存储结果
     IDENT_INTERFACE res;
+	res.target = 2;
 
     //时间戳
     typedef std::chrono::high_resolution_clock Clock;
@@ -1124,6 +1126,7 @@ IDENT_INTERFACE secondDetection(Mat src, bool debug)
 IDENT_INTERFACE thirdDetection(Mat src, bool debug)
 {
     IDENT_INTERFACE res;
+	res.target = 3;
 
     //时间戳
     typedef std::chrono::high_resolution_clock Clock;
@@ -1222,6 +1225,7 @@ IDENT_INTERFACE thirdDetection(Mat src, bool debug)
 IDENT_INTERFACE Interface(Mat src, int targetLabel, bool debug)
 {
     IDENT_INTERFACE res;
+	
     switch (targetLabel)
     {
     case 1:
