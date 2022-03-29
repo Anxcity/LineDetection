@@ -103,9 +103,9 @@ int main()
         cout << firstRes[i] <<" ";
     cout<< endl; 
 
-    Mat destImage;
-    Rotate(src, destImage, firstRes[2]);
-    imwrite("dst.png", destImage);
+    // Mat destImage;
+    // Rotate(src, destImage, firstRes[2]);
+    // imwrite("dst.png", destImage);
 
     vector<double> secondRes = secondDetection(src_bak, 1);
     for(int i = 0; i < 3; i++)
