@@ -1,12 +1,10 @@
 # LineDetection
 ## 主要接口函数
-* firstDetection(Mat src)->vector 接收一个Mat参数，返回一个队列，同时输出运行时间
-* secondDetection(Mat src, bool debug)->vector 接收一个Mat参数和一个debug参数，当debug为0时正常返回一个队列，debug为1时画出塔和线的边框（需要添加的飞手观看的指示还未添加），同时输出运行时间。在没找到线时返回三个999。
-* thirdDetection(Mat src, bool debug)->vector 接收一个Mat参数和一个debug参数，当debug为0时正常返回一个队列，debug为1时画出线的边框（需要添加的飞手观看的指示还未添加），同时输出运行时间。在图像中心没找到线时返回三个999（因为此时应该已经在线的正上方）。
+* IDENT_INTERFACE Interface(Mat src, int targetLabel, bool debug) 按照最新的接口文档接收3个参数，返回一个包含6个参数的结构体
+
 ## 一些更新
-* 修复了之前图片报错的bug
-* 删除了批量读取本地图片的代码（io头文件不支持）
-* 优化了速度，在我们这测试一张图片在第一步0.1s左右，第二步0.05s左右，第三步0.07s左右。因为一次只进行一步即调用一个接口函数，基本可以满足每秒5-10帧的需求
-* 函数具体使用方法见主函数，直接调用即可
+* 为每一步前置、塔检测、线检测加了具体时间测量
+* 一张测试图片和结果在pic文件夹下
+
 ## 后续更新
-* 尽快添加飞手观看部分
+* 优化算法速度

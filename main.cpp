@@ -15,6 +15,19 @@ using namespace cv;
 //tower
 typedef pair<int, int> Region; //用pair表示塔架区域的坐标（比如region_x表示横坐标的区域，firs表示左侧 second表示右侧 regionx_y同理）
 
+//返回结构体
+struct IDENT_INTERFACE
+{
+    int target;  //当前目标
+    float angel; //角度
+    int x;       //x坐标
+    int y;       //y坐标
+    int a;       //塔架长
+    int b;       //塔架宽
+    Mat image;   //debug图像
+};
+
+
 /***
  *  声明函数部分
  *  分为前置处理、塔检测和线检测三个部分
@@ -66,7 +79,7 @@ Region VerticalProjection(Mat srcImage, Mat src_harris);
 //水平积分投影
 Region HorizonProjection(Mat srcImage, Mat src_harris);
 //塔架检测函数，返回值为一对正负1点对，first为横向返回值（向右为1，向左为-1），second为纵向返回值（向上为1，向下为-1）
-Region tower_detection(Mat src, Mat src_re, Mat src_canny);
+Region tower_detection(Mat src, Mat src_re, Mat src_canny, Mat src_harris, Region region_x, Region region_y);
 //第二步塔检测函数
 Region tower_detection_two(Mat src, Mat src_re, Mat src_canny, Mat src_harris, Region region_x, Region region_y);
 
@@ -75,11 +88,15 @@ Region tower_detection_two(Mat src, Mat src_re, Mat src_canny, Mat src_harris, R
  ***/
 
 //第一步返回位置角度信息
-vector<double> firstDetection(Mat src);
+IDENT_INTERFACE firstDetection(Mat src, bool debug);
 //第二步
-vector<double> secondDetection(Mat src, bool debug);
+IDENT_INTERFACE secondDetection(Mat src, bool debug);
 //第三步
-vector<double> thirdDetection(Mat src, bool debug);
+IDENT_INTERFACE thirdDetection(Mat src, bool debug);
+
+//返回函数
+IDENT_INTERFACE Interface(Mat src, int targetLabel, bool debug);
+
 
 //测试使用，旋转图片
 void Rotate(const Mat &srcImage, Mat &destImage, double angle)
@@ -98,24 +115,26 @@ int main()
     Mat src = imread(path);
     Mat src_bak = src.clone();
 
-    vector<double> firstRes = firstDetection(src);
-    for(int i = 0; i < 3; i++)
-        cout << firstRes[i] <<" ";
-    cout<< endl; 
+    IDENT_INTERFACE res = Interface(src, 1, 1);
+    cout << res.x << " " << res.y << " " << res.a << " " << res.b << " " << res.angel << " " << endl;
+    // vector<double> firstRes = firstDetection(src);
+    // for(int i = 0; i < 3; i++)
+    //     cout << firstRes[i] <<" ";
+    // cout<< endl; 
 
     // Mat destImage;
     // Rotate(src, destImage, firstRes[2]);
     // imwrite("dst.png", destImage);
 
-    vector<double> secondRes = secondDetection(src_bak, 1);
-    for(int i = 0; i < 3; i++)
-        cout << secondRes[i] <<" ";
-    cout << endl; 
+    // vector<double> secondRes = secondDetection(src_bak, 1);
+    // for(int i = 0; i < 3; i++)
+    //     cout << secondRes[i] <<" ";
+    // cout << endl; 
 
-    vector<double> thirdRes = thirdDetection(src_bak, 1);
-    for(int i = 0; i < 3; i++)
-        cout << thirdRes[i] <<" ";
-    cout << endl; 
+    // vector<double> thirdRes = thirdDetection(src_bak, 1);
+    // for(int i = 0; i < 3; i++)
+    //     cout << thirdRes[i] <<" ";
+    // cout << endl; 
 }
 
 pair<double, double> Line(double x1, double y1, double x2, double y2)
@@ -254,11 +273,11 @@ vector<Vec4d> GetParaLine(vector<Vec4d> lines)
 {
     vector<Vec4d> para_line;
     int n = -1; //平行线个数
-    for (size_t i = 0; i < lines.size(); i++)
+    for (size_t i = 0; i < lines.size(); ++i)
     {
         Vec4d temp = lines[i];
         double k_i = atan2(temp[1] - temp[3], temp[0] - temp[2]) * 180 / CV_PI;
-        for(int j = 0; j < lines.size(); j++)
+        for(int j = 0; j < lines.size(); ++j)
         {
             Vec4d temp_j = lines[j];
             double k_j = atan2(temp_j[1] - temp_j[3], temp_j[0] - temp_j[2]) * 180 / CV_PI;
@@ -281,7 +300,7 @@ vector<Vec4d> MergeParaLine(vector<Vec4d> para_line)
     //判断是否在一条直线上
     vector<Vec4d> P_Line;
     P_Line.push_back(para_line[0]);
-    for (int i = 1; i < para_line.size(); i++)
+    for (int i = 1; i < para_line.size(); ++i)
     {
         Vec4d temp = para_line[i];
         pair<double, double> result = Line(temp[0], temp[1], temp[2], temp[3]);
@@ -290,7 +309,7 @@ vector<Vec4d> MergeParaLine(vector<Vec4d> para_line)
 
         int flag = 0;
 
-        for(int j = 0; j < P_Line.size(); j++)
+        for(int j = 0; j < P_Line.size(); ++j)
         {
             Vec4d temp_j = P_Line[j];
             pair<double, double> result_j = Line(temp_j[0], temp_j[1], temp_j[2], temp_j[3]);
@@ -325,7 +344,7 @@ double GetKmeansTheta(vector<Vec4d> para_line, vector<double> k_tan_bak, Mat& sr
     else
         K = k_tan_bak.size() / 8;
     
-    for (int i = 0; i < para_line.size(); i++)
+    for (int i = 0; i < para_line.size(); ++i)
     {
         Vec4d temp = para_line[i];
         //float k_temp = (temp[1] - temp[3]) / (temp[0] - temp[2] + 0.00001);
@@ -356,7 +375,7 @@ double GetKmeansTheta(vector<Vec4d> para_line, vector<double> k_tan_bak, Mat& sr
     vector<Cluster> clusters = kmeans.clusters;
     int MAX_1 = 0, MAX_2 = 0;
     vector<double> stdev;
-    for(int i = 0; i < K; i++)
+    for(int i = 0; i < K; ++i)
     {
             int total_points_cluster =  clusters[i].getTotalPoints();
             vector<double> theta;
@@ -381,13 +400,13 @@ double GetKmeansTheta(vector<Vec4d> para_line, vector<double> k_tan_bak, Mat& sr
     int total_points_cluster =  clusters[MAX_2].getTotalPoints();
     //cout << total_points_cluster << endl;
     //cout << "Cluster " << clusters[i].getID() + 1 << endl;
-    for(int j = 0; j < total_points_cluster; j++)
+    for(int j = 0; j < total_points_cluster; ++j)
     {
         //cout << "Point " << clusters[i].getPoint(j).getID() + 1 << ": ";
                     
         Vec4f temp = para_line[clusters[MAX_2].getPoint(j).getID()];
         //if(abs(clusters[i].getPoint(j).getValue(0) - clusters[i].getCentralValue(0)) < 2)
-            line(src, Point(temp[0], temp[1]), Point(temp[2], temp[3]), Scalar(255, 0, 0), 2, CV_AA);     
+            //line(src, Point(temp[0], temp[1]), Point(temp[2], temp[3]), Scalar(255, 0, 0), 2, CV_AA);     
 
             //for(int p = 0; p < total_values; p++)
             //cout << clusters[i].getPoint(j).getValue(p) << " ";
@@ -406,7 +425,6 @@ double GetKmeansTheta(vector<Vec4d> para_line, vector<double> k_tan_bak, Mat& sr
 
 double GetTheta(Mat &src, Mat src_canny)
 {
-    typedef std::chrono::high_resolution_clock Clock;
     //4k转化为1080p
     //resize(src, src, Size(src.cols/2, src.rows/2));
     if (!src.data){
@@ -420,21 +438,20 @@ double GetTheta(Mat &src, Mat src_canny)
     //cv::imwrite("edge.png", src_canny);
     
     //霍夫直线检测初步处理
-    vector<Vec4d> line_data = HoughFirstStep(src_canny);
-    auto t1 = Clock::now();
+    vector<Vec4d> line_data; 
+    line_data = HoughFirstStep(src_canny);
 
     //平行线组
-    vector<Vec4d> para_line = GetParaLine(line_data);
-    auto t2 = Clock::now();
+    vector<Vec4d> para_line;
+    para_line = GetParaLine(line_data);
 
     //合并平行线
     para_line = MergeParaLine(para_line);
-    auto t3 = Clock::now();
     //cout << para_line.size() << endl;
 
     //计算平行线斜率角度theta    
     vector<double> k_tan;
-    for (int i = 0; i < para_line.size(); i++)
+    for (int i = 0; i < para_line.size(); ++i)
 	{
         Vec4f temp = para_line[i];
         k_tan.push_back(atan2(temp[1] - temp[3], temp[0] - temp[2]) * 180 / CV_PI);
@@ -461,10 +478,7 @@ double GetTheta(Mat &src, Mat src_canny)
     //resize(src, src, Size(src.cols/4, src.rows/4));
 	//cv::imwrite(name, src);
     //waitKey(0);
-    auto t4 = Clock::now();
-    //cout << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e+9 <<'\n';
-    //cout << std::chrono::duration_cast<std::chrono::nanoseconds>(t3 - t2).count() / 1e+9 <<'\n';
-    //cout << std::chrono::duration_cast<std::chrono::nanoseconds>(t4 - t3).count() / 1e+9 <<'\n';
+    
     return theta;
 }
 
@@ -505,7 +519,7 @@ double DrawLine(Mat &src, Mat src_canny, Region region_x)
     for (int i = 0; i < P_Line.size(); i++)
 	{
         Vec4f temp = P_Line[i];
-        line(src, Point(temp[0], temp[1]), Point(temp[2], temp[3]), (0,0,255), 3, CV_AA);     
+        //line(src, Point(temp[0], temp[1]), Point(temp[2], temp[3]), (0,0,255), 3, CV_AA);     
         pair<double, double> result = Line(temp[0], temp[1], temp[2], temp[3]);
         //上边界y = 0
         double x_top = -result.second / result.first;
@@ -837,7 +851,7 @@ Region HorizonProjection(Mat srcImage, Mat src_harris)//水平积分投影
 	return region_y;
 }
 
-Region tower_detection(Mat src, Mat src_re, Mat src_canny)//塔架检测函数，返回值为一对正负1点对，first为横向返回值（向右为1，向左为-1），second为纵向返回值（向上为1，向下为-1）
+Region tower_detection(Mat src, Mat src_re, Mat src_canny, Mat src_harris, Region region_x, Region region_y)//塔架检测函数，返回值为一对正负1点对，first为横向返回值（向右为1，向左为-1），second为纵向返回值（向上为1，向下为-1）
 {
 	//Mat src_re;//src为输入图像 src_re为绘制检测区域的图像
     //src = imread("/home/ppzsml/TT/001.jpg");
@@ -846,13 +860,13 @@ Region tower_detection(Mat src, Mat src_re, Mat src_canny)//塔架检测函数�
 	// src = ImageSplit(src);
 	
 	//Mat src_canny;
-	Mat src_harris;
-	//src_canny = ImageCanny(src);
-	src_harris = ImageHarris(src);
+	// Mat src_harris;
+	// //src_canny = ImageCanny(src);
+	// src_harris = ImageHarris(src);
 	
-	Region region_x, region_y;//x为区域横坐标 y为区域纵坐标
-	region_x = VerticalProjection(src_canny, src_harris);
-	region_y = HorizonProjection(src_canny, src_harris);
+	// Region region_x, region_y;//x为区域横坐标 y为区域纵坐标
+	// region_x = VerticalProjection(src_canny, src_harris);
+	// region_y = HorizonProjection(src_canny, src_harris);
 	
 	rectangle(src_re, Point(region_x.first, region_y.first), Point(region_x.second, region_y.second), Scalar( 0, 0, 255), 1, 8);//绘制塔架区域
 	Region center;
@@ -951,10 +965,10 @@ Region tower_detection_two(Mat src, Mat src_re, Mat src_canny, Mat src_harris, R
 
 
 //整合函数
-vector<double> firstDetection(Mat src)
+IDENT_INTERFACE firstDetection(Mat src, bool debug)
 {
     //存储结果
-    vector<double> res;
+    IDENT_INTERFACE res;
 
     //时间戳
 	typedef std::chrono::high_resolution_clock Clock;
@@ -972,28 +986,43 @@ vector<double> firstDetection(Mat src)
 
     //塔检测 
 	auto t2 = Clock::now();
-    Region t = tower_detection(src_tower, src_re_tower, src_tower_canny);
-    res.push_back(t.first);
-    res.push_back(t.second);
+    Mat src_harris;
+	src_harris = ImageHarris(src_tower);
+	Region region_x, region_y;//x为区域横坐标 y为区域纵坐标
+	region_x = VerticalProjection(src_tower_canny, src_harris);
+	region_y = HorizonProjection(src_tower_canny, src_harris);
+
+    Region t = tower_detection(src_tower, src_re_tower, src_tower_canny, src_harris, region_x, region_y);
+    res.x = t.first;
+    res.y = t.second;
+    res.a = (region_x.second - region_x.first) * 3;
+    res.b = (region_y.second - region_y.first) * 3;
 
     //线检测
 	auto t3 = Clock::now();
     double theta = GetTheta(src_re, src_canny);
-    res.push_back(theta);
+    res.angel = theta;
     auto t4 = Clock::now();
 
-	cout << "步骤一时间为：" << std::chrono::duration_cast<std::chrono::nanoseconds>(t4 - t1).count() / 1e+9 <<'\n';
-    //cout << std::chrono::duration_cast<std::chrono::nanoseconds>(t3 - t2).count() / 1e+9 <<'\n';
-    //cout << std::chrono::duration_cast<std::chrono::nanoseconds>(t4 - t3).count() / 1e+9 <<'\n';
+	cout << "步骤一前置时间为：" << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e+9 <<'\n';
+    cout << "步骤一塔检测时间为：" << std::chrono::duration_cast<std::chrono::nanoseconds>(t3 - t2).count() / 1e+9 <<'\n';
+    cout << "步骤一线检测时间为：" << std::chrono::duration_cast<std::chrono::nanoseconds>(t4 - t3).count() / 1e+9 <<'\n';
+    cout << "步骤一总时间为：" << std::chrono::duration_cast<std::chrono::nanoseconds>(t4 - t1).count() / 1e+9 <<'\n';
+
+    if(debug)
+    {
+	    rectangle(src_re, Point(region_x.first * 3, region_y.first * 3), Point(region_x.second * 3, region_y.second * 3), Scalar( 0, 0, 255), 3, 8);//绘制塔架区域
+        //imwrite("first.png", src_re);
+    }
 
     return res; 
 }
 
 //第二步
-vector<double> secondDetection(Mat src, bool debug)
+IDENT_INTERFACE secondDetection(Mat src, bool debug)
 {
     //存储结果
-    vector<double> res;
+    IDENT_INTERFACE res;
 
     //时间戳
     typedef std::chrono::high_resolution_clock Clock;
@@ -1028,9 +1057,9 @@ vector<double> secondDetection(Mat src, bool debug)
 
     if(mid == 999)
     {
-        res.push_back(999);
-        res.push_back(999);
-        res.push_back(999);
+        res.x = 999;
+        res.y = 999;
+        res.angel = 999;
     }
     else
     {
@@ -1061,13 +1090,12 @@ vector<double> secondDetection(Mat src, bool debug)
         {
             result.second = -1;
         }
-        res.push_back(result.first);
-        res.push_back(result.second);
-        res.push_back(0);
+        res.x = result.first;
+        res.y = result.second;
+        res.angel = 0;
+
     }
-
-
-    auto t4 = Clock::now();
+    
     if(debug)
     {
         region_x.first = region_x.first * 3 ;
@@ -1075,21 +1103,27 @@ vector<double> secondDetection(Mat src, bool debug)
         region_y.first = region_y.first * 3 ;
 	    region_y.second = region_y.second * 3;
 	    //cout<<center.first<<" "<<center.second<<endl;
+        res.a = region_x.second - region_x.first;
+        res.b = region_y.second - region_y.first;
         circle( src_re, Point(center.first, center.second), 5,  Scalar(0, 0, 255), 3, 8, 0 );
 	    rectangle(src_re, Point(region_x.first, region_y.first), Point(region_x.second, region_y.second), Scalar( 0, 0, 255), 3, 8);//绘制塔架区域
-        imwrite("second.png", src_re);
+        //imwrite("second.png", src_re);
+        res.image = src_re;
     }
-        
-    cout << "步骤二时间为：" << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e+9 <<'\n';
-    //cout << std::chrono::duration_cast<std::chrono::nanoseconds>(t3 - t2).count() / 1e+9 <<'\n';
-    //cout << std::chrono::duration_cast<std::chrono::nanoseconds>(t4 - t3).count() / 1e+9 <<'\n';
+
+    auto t4 = Clock::now(); 
+    cout << "步骤二前置时间为：" << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e+9 <<'\n';
+    cout << "步骤二塔检测时间为：" << std::chrono::duration_cast<std::chrono::nanoseconds>(t3 - t2).count() / 1e+9 <<'\n';
+    cout << "步骤二线检测时间为：" << std::chrono::duration_cast<std::chrono::nanoseconds>(t4 - t3).count() / 1e+9 <<'\n';
+    cout << "步骤二总时间为：" << std::chrono::duration_cast<std::chrono::nanoseconds>(t4 - t1).count() / 1e+9 <<'\n';
+    
     return res; 
 }
 
 //第三步
-vector<double> thirdDetection(Mat src, bool debug)
+IDENT_INTERFACE thirdDetection(Mat src, bool debug)
 {
-    vector<double> res;
+    IDENT_INTERFACE res;
 
     //时间戳
     typedef std::chrono::high_resolution_clock Clock;
@@ -1102,10 +1136,12 @@ vector<double> thirdDetection(Mat src, bool debug)
     Mat src_canny = ImageCanny(src);
 
     //霍夫直线检测初步处理
-    vector<Vec4d> line_data = HoughFirstStep(src_canny);
+    vector<Vec4d> line_data;
+    line_data = HoughFirstStep(src_canny);
 
     //平行线组
-    vector<Vec4d> para_line = GetParaLine(line_data);
+    vector<Vec4d> para_line;
+    para_line = GetParaLine(line_data);
 
     //合并平行线
     para_line = MergeParaLine(para_line);
@@ -1132,9 +1168,9 @@ vector<double> thirdDetection(Mat src, bool debug)
     //没有90度左右的平行线
     if(P_Line.size() == 0)
     {
-        res.push_back(999);
-        res.push_back(999);
-        res.push_back(999);
+        res.x = 999;
+        res.y = 999;
+        res.angel = 999;
         return res;
     }
 
@@ -1142,7 +1178,7 @@ vector<double> thirdDetection(Mat src, bool debug)
     for (int i = 0; i < P_Line.size(); i++)
 	{
         Vec4f temp = P_Line[i];
-        line(src, Point(temp[0], temp[1]), Point(temp[2], temp[3]), (0,0,255), 3, CV_AA);     
+        //line(src, Point(temp[0], temp[1]), Point(temp[2], temp[3]), (0,0,255), 3, CV_AA);     
         pair<double, double> result = Line(temp[0], temp[1], temp[2], temp[3]);
         //上边界y = 0
         double x_top = -result.second / result.first;
@@ -1167,16 +1203,36 @@ vector<double> thirdDetection(Mat src, bool debug)
     cout << "步骤三时间为：" << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e+9 <<'\n';
     
     //不用移动x，y
-    res.push_back(0);
-    res.push_back(0);
-    res.push_back(theta);
+    res.x = 0;
+    res.y = 0;
+    res.angel = theta;
 
     if(debug)
     {
 	    //cout<<center.first<<" "<<center.second<<endl;
+        circle( src_re, Point(src.cols / 2, src.rows / 2), 5,  Scalar(0, 0, 255), 3, 8, 0 );
 	    rectangle(src_re, Point(region_x.first, 10), Point(region_x.second, src.rows - 10), Scalar( 0, 0, 255), 3, 8);//绘制塔架区域
-        imwrite("third.png", src_re);
+        res.image = src_re;
+        //imwrite("third.png", src_re);
     }
 
+    return res;
+}
+
+IDENT_INTERFACE Interface(Mat src, int targetLabel, bool debug)
+{
+    IDENT_INTERFACE res;
+    switch (targetLabel)
+    {
+    case 1:
+        res = firstDetection(src, debug);
+        break;
+    case 2:
+        res = secondDetection(src, debug);
+        break;
+    case 3:
+        res = thirdDetection(src, debug);
+        break;
+    }
     return res;
 }
