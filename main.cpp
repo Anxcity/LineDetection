@@ -115,7 +115,7 @@ int main()
     Mat src = imread(path);
     Mat src_bak = src.clone();
 
-    IDENT_INTERFACE res = Interface(src, 3, 1);
+    IDENT_INTERFACE res = Interface(src, 1, 1);
     cout << res.target << " "<< res.x << " " << res.y << " " << res.a << " " << res.b << " " << res.angel << " " << endl;
     // vector<double> firstRes = firstDetection(src);
     // for(int i = 0; i < 3; i++)
@@ -233,7 +233,7 @@ Mat ImageCanny(Mat src)//边缘检测
 	GaussianBlur(src_gray, src_Blur, Size(5, 5), 2, 2); //高斯滤波
 	double low = 50;
 	double high = 200;
-	AdaptiveFindThreshold(src_Blur, low, high, 3);
+	//AdaptiveFindThreshold(src_Blur, low, high, 3);
     Canny(src_Blur, dst, low, high); //边缘检测
     //imshow("边缘图", dst);
 	//imwrite("edge.png", dst);
@@ -246,7 +246,7 @@ vector<Vec4d> HoughFirstStep(Mat src)
     //霍夫直线检测
     vector<Vec4d> line_data;
     //角度
-    HoughLinesP(src, line_data, 1, CV_PI/180.0, 100, 80 ,5);
+    HoughLinesP(src, line_data, 1, CV_PI/180.0, 50, 50 ,5);
     //线
     //HoughLinesP(src, line_data, 1, CV_PI/180.0, 50, 50 ,10);
     //HoughLines(src_canny, line_data, 1, CV_PI/180.0, 300, W_min ,W_max);
@@ -265,6 +265,7 @@ vector<Vec4d> HoughSecondStep(Mat src)
     HoughLinesP(src, line_data, 1, CV_PI/180.0, 50, 50 ,15);
     //HoughLines(src_canny, line_data, 1, CV_PI/180.0, 300, W_min ,W_max);
 
+    //cout << line_data.size() << endl;
     return line_data;
 }
 
@@ -349,7 +350,6 @@ double GetKmeansTheta(vector<Vec4d> para_line, vector<double> k_tan_bak, Mat& sr
         Vec4d temp = para_line[i];
         //float k_temp = (temp[1] - temp[3]) / (temp[0] - temp[2] + 0.00001);
         vector<double> values;
-            //line(src, Point(temp[0], temp[1]), Point(temp[2], temp[3]), color, 2, CV_AA);
             total_points += 1;
 			values.push_back(k_tan_bak[i]);
 			//values.push_back(abs(k_all[i][3]));
@@ -447,7 +447,7 @@ double GetTheta(Mat &src, Mat src_canny)
 
     //合并平行线
     para_line = MergeParaLine(para_line);
-    //cout << para_line.size() << endl;
+    cout << para_line.size() << endl;
 
     //计算平行线斜率角度theta    
     vector<double> k_tan;
@@ -485,7 +485,7 @@ double GetTheta(Mat &src, Mat src_canny)
 double DrawLine(Mat &src, Mat src_canny, Region region_x)
 {
     //霍夫直线检测初步处理
-    vector<Vec4d> line_data = HoughFirstStep(src_canny);
+    vector<Vec4d> line_data = HoughSecondStep(src_canny);
 
     //平行线组
     vector<Vec4d> para_line = GetParaLine(line_data);
@@ -514,12 +514,12 @@ double DrawLine(Mat &src, Mat src_canny, Region region_x)
 
     int Right = 0;
     double Min = -1;
-    region_x.first = 3 * region_x.first;
-    region_x.second = 3 * region_x.second;
+    region_x.first = region_x.first;
+    region_x.second = region_x.second;
     for (int i = 0; i < P_Line.size(); i++)
 	{
         Vec4f temp = P_Line[i];
-        //line(src, Point(temp[0], temp[1]), Point(temp[2], temp[3]), (0,0,255), 3, CV_AA);     
+        //line(src, Point(temp[0], temp[1]), Point(temp[2], temp[3]), (0,0,255), 2, CV_AA);     
         pair<double, double> result = Line(temp[0], temp[1], temp[2], temp[3]);
         //上边界y = 0
         double x_top = -result.second / result.first;
@@ -537,7 +537,7 @@ double DrawLine(Mat &src, Mat src_canny, Region region_x)
 	}   
     //cout << Min << endl; 
     //cout << Right << endl;
-    Rect rect(Min-25, 5, 50, src.rows);//左上坐标（x,y）和矩形的长(x)宽(y)
+    Rect rect(Min-15, 5, 30, src.rows);//左上坐标（x,y）和矩形的长(x)宽(y)
     cv::rectangle(src, rect, Scalar(0, 0, 255), 3, LINE_8,0);
 
     return Min;
@@ -976,24 +976,24 @@ IDENT_INTERFACE firstDetection(Mat src, bool debug)
 
     //前置部分
 	auto t1 = Clock::now();
-	src = ImageSize(src, 2);
+	src = ImageSize(src, 1);
 	Mat src_re = src;
 	src = ImageSplit(src);
     Mat src_canny = ImageCanny(src);
 
-    Mat src_tower = ImageSize(src, 1);
-    Mat src_re_tower = ImageSize(src_re, 1);
-    Mat src_tower_canny = ImageSize(src_canny, 1);
+    //Mat src_tower = ImageSize(src, 1);
+    //Mat src_re_tower = ImageSize(src_re, 1);
+    //Mat src_tower_canny = ImageSize(src_canny, 1);
 
     //塔检测 
 	auto t2 = Clock::now();
     Mat src_harris;
-	src_harris = ImageHarris(src_tower);
+	src_harris = ImageHarris(src_re);
 	Region region_x, region_y;//x为区域横坐标 y为区域纵坐标
-	region_x = VerticalProjection(src_tower_canny, src_harris);
-	region_y = HorizonProjection(src_tower_canny, src_harris);
+	region_x = VerticalProjection(src_canny, src_harris);
+	region_y = HorizonProjection(src_canny, src_harris);
 
-    Region t = tower_detection(src_tower, src_re_tower, src_tower_canny, src_harris, region_x, region_y);
+    Region t = tower_detection(src, src_re, src_canny, src_harris, region_x, region_y);
     res.x = t.first;
     res.y = t.second;
     res.a = (region_x.second - region_x.first) * 3;
@@ -1013,8 +1013,8 @@ IDENT_INTERFACE firstDetection(Mat src, bool debug)
     if(debug)
     {
         string text = "angel: " + to_string(theta) + " x: " + to_string(res.x) + " y: " + to_string(res.y);
-        putText(src_re, text, Point(100,100), FONT_HERSHEY_SIMPLEX, 2, (255,0,0), 8);
-	    rectangle(src_re, Point(region_x.first * 3, region_y.first * 3), Point(region_x.second * 3, region_y.second * 3), Scalar( 0, 0, 255), 3, 8);//绘制塔架区域
+        putText(src_re, text, Point(10,60), FONT_HERSHEY_SIMPLEX, 1 , (0,0,255), 2 , 8);
+	    rectangle(src_re, Point(region_x.first, region_y.first), Point(region_x.second, region_y.second), Scalar( 0, 0, 255), 2, 8);//绘制塔架区域
         //imwrite("first.png", src_re);
     }
 
@@ -1034,22 +1034,22 @@ IDENT_INTERFACE secondDetection(Mat src, bool debug)
     //前置部分
     auto t1 = Clock::now();
 
-	src = ImageSize(src, 2);
+	src = ImageSize(src, 1);
 	Mat src_re = src;
 	src = ImageSplit(src);
     Mat src_canny = ImageCanny(src);
-    Mat src_tower = ImageSize(src, 1);
-    Mat src_harris = ImageHarris(src_tower);
-    Mat src_re_tower = ImageSize(src_re, 1);
-    Mat src_tower_canny = ImageSize(src_canny, 1);
+    //Mat src_tower = ImageSize(src, 1);
+    Mat src_harris = ImageHarris(src);
+    //Mat src_re_tower = ImageSize(src_re, 1);
+    //Mat src_tower_canny = ImageSize(src_canny, 1);
 
     Region region_x, region_y;
-	region_x = VerticalProjection(src_tower_canny, src_harris);
-	region_y = HorizonProjection(src_tower_canny, src_harris);
+	region_x = VerticalProjection(src_canny, src_harris);
+	region_y = HorizonProjection(src_canny, src_harris);
 
     //塔检测 
     auto t2 = Clock::now();
-    Region t = tower_detection_two(src_tower, src_re_tower, src_tower_canny, src_harris, region_x, region_y);
+    Region t = tower_detection_two(src, src_re, src_canny, src_harris, region_x, region_y);
 
     //线
     auto t3 = Clock::now();
@@ -1057,7 +1057,7 @@ IDENT_INTERFACE secondDetection(Mat src, bool debug)
 
     Region center;
     center.first = mid;
-    center.second = (region_y.first + region_y.second) * 3 / 2;
+    center.second = (region_y.first + region_y.second) / 2;
 
     if(mid == 999)
     {
@@ -1103,19 +1103,19 @@ IDENT_INTERFACE secondDetection(Mat src, bool debug)
     auto t4 = Clock::now(); 
     if(debug)
     {
-        region_x.first = region_x.first * 3 ;
-	    region_x.second = region_x.second * 3;
-        region_y.first = region_y.first * 3 ;
-	    region_y.second = region_y.second * 3;
+        region_x.first = region_x.first ;
+	    region_x.second = region_x.second;
+        region_y.first = region_y.first;
+	    region_y.second = region_y.second;
 	    //cout<<center.first<<" "<<center.second<<endl;
-        res.a = region_x.second - region_x.first;
-        res.b = region_y.second - region_y.first;
+        res.a = (region_x.second - region_x.first) * 3;
+        res.b = (region_y.second - region_y.first) * 3;
 
         string text = "angel: " + to_string(res.angel) + " x: " + to_string(res.x) + " y: " + to_string(res.y);
-        putText(src_re, text, Point(100,100), FONT_HERSHEY_SIMPLEX, 2, (255,0,0), 8);
+        putText(src_re, text, Point(10,50), FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 1, 8);
         
-        circle( src_re, Point(center.first, center.second), 5,  Scalar(0, 0, 255), 3, 8, 0 );
-	    rectangle(src_re, Point(region_x.first, region_y.first), Point(region_x.second, region_y.second), Scalar( 0, 0, 255), 3, 8);//绘制塔架区域
+        circle( src_re, Point(center.first, center.second), 5,  Scalar(0, 0, 255), 2, 8, 0 );
+	    rectangle(src_re, Point(region_x.first, region_y.first), Point(region_x.second, region_y.second), Scalar( 0, 0, 255), 2, 8);//绘制塔架区域
         //imwrite("second.png", src_re);
         res.image = src_re;
     }
@@ -1140,14 +1140,14 @@ IDENT_INTERFACE thirdDetection(Mat src, bool debug)
     auto t1 = Clock::now();
 
     //前置
-    src = ImageSize(src, 2);
+    src = ImageSize(src, 1);
 	Mat src_re = src;
 	src = ImageSplit(src);
     Mat src_canny = ImageCanny(src);
 
     //霍夫直线检测初步处理
     vector<Vec4d> line_data;
-    line_data = HoughFirstStep(src_canny);
+    line_data = HoughSecondStep(src_canny);
 
     //平行线组
     vector<Vec4d> para_line;
@@ -1158,8 +1158,8 @@ IDENT_INTERFACE thirdDetection(Mat src, bool debug)
     //cout << para_line.size() << endl;
 
     Region region_x;
-    region_x.first = (src.cols / 2 - 50);
-    region_x.second = (src.cols / 2 + 50);
+    region_x.first = (src.cols / 2 - 10);
+    region_x.second = (src.cols / 2 + 10);
 
     //保留90度直线  
     //vector<double> k_tan;
@@ -1221,10 +1221,10 @@ IDENT_INTERFACE thirdDetection(Mat src, bool debug)
     {
 	    //cout<<center.first<<" "<<center.second<<endl;
         string text = "angel: " + to_string(res.angel) + " x: " + to_string(res.x) + " y: " + to_string(res.y);
-        putText(src_re, text, Point(100,100), FONT_HERSHEY_SIMPLEX, 2, (255,0,0), 8);
+        putText(src_re, text, Point(10,50), FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 1, 8);
 
-        circle( src_re, Point(src.cols / 2, src.rows / 2), 5,  Scalar(0, 0, 255), 3, 8, 0 );
-	    rectangle(src_re, Point(region_x.first, 10), Point(region_x.second, src.rows - 10), Scalar( 0, 0, 255), 3, 8);//绘制塔架区域
+        circle( src_re, Point(src.cols / 2, src.rows / 2), 5,  Scalar(0, 0, 255), 2, 8, 0 );
+	    rectangle(src_re, Point(region_x.first, 10), Point(region_x.second, src.rows - 10), Scalar( 0, 0, 255), 2, 8);//绘制塔架区域
         res.image = src_re;
         //imwrite("third.png", src_re);
     }
