@@ -1035,8 +1035,8 @@ IDENT_INTERFACE firstDetection(Mat src, bool debug)
     Region t = tower_detection(src, src_re, src_canny, src_harris, region_x, region_y);
     res.x = t.first;
     res.y = t.second;
-    res.a = (region_x.second - region_x.first) * 3;
-    res.b = (region_y.second - region_y.first) * 3;
+    res.a = abs(region_x.second - region_x.first) * 3;
+    res.b = abs(region_y.second - region_y.first) * 3;
 
     //线检测
 	auto t3 = Clock::now();
@@ -1109,8 +1109,8 @@ IDENT_INTERFACE secondDetection(Mat src, bool debug)
 
     if(mid == 999)
     {
-        //res.x = 999;
-        //res.y = 999;
+        res.x = 999;
+        res.y = 999;
         res.angel = 999;
     }
 
@@ -1150,15 +1150,11 @@ IDENT_INTERFACE secondDetection(Mat src, bool debug)
     }
 
     auto t4 = Clock::now(); 
+	    //cout<<center.first<<" "<<center.second<<endl;
+    res.a = abs(region_x.second - region_x.first) * 3;
+    res.b = abs(region_y.second - region_y.first) * 3;
     if(debug)
     {
-        region_x.first = region_x.first ;
-	    region_x.second = region_x.second;
-        region_y.first = region_y.first;
-	    region_y.second = region_y.second;
-	    //cout<<center.first<<" "<<center.second<<endl;
-        res.a = (region_x.second - region_x.first) * 3;
-        res.b = (region_y.second - region_y.first) * 3;
 
         string text = "angel: " + to_string(res.angel) + " x: " + to_string(res.x) + " y: " + to_string(res.y);
         putText(src_re, text, Point(10,50), FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 1, 8);
