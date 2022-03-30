@@ -130,7 +130,7 @@ int main()
         Mat src = frame.clone();
         Mat src_bak = frame.clone();
 
-        IDENT_INTERFACE res = Interface(src, 2, 1);
+        IDENT_INTERFACE res = Interface(src, 1, 1);
         cout << res.target << " "<< res.x << " " << res.y << " " << res.a << " " << res.b << " " << res.angel << " " << endl;
     
         imshow("result", res.image);
@@ -672,13 +672,13 @@ Region VerticalProjection(Mat srcImage, Mat src_harris)//垂直积分投影
 		cols_harris_2[i] = ct/10; 
 	}
 	//对边缘图和角点图取交集，如果该列角点数为0，将边缘数也设置为0
-	for(int i = 0; i < srcImage.cols; i++)
-	{
-		if(cols_harris_2[i] == 0 )
-		{
-			colswidth[i] = 0;
-		}
-	}
+	// for(int i = 0; i < srcImage.cols; i++)
+	// {
+	// 	if(cols_harris_2[i] == 0 )
+	// 	{
+	// 		colswidth[i] = 0;
+	// 	}
+	// }
 	
 	//将取交集后的边缘投影图平滑化处理
 	for (int i = 4; i < srcImage.cols - 6; i++)
@@ -808,13 +808,13 @@ Region HorizonProjection(Mat srcImage, Mat src_harris)//水平积分投影
 		rowsharris_2[i] = ct/10; 
 	}
 	//对边缘图和角点图取交集，如果该列角点数为0，将边缘数也设置为0
-	for(int i = 0; i < srcImage.rows; i++)
-	{
-		if(rowsharris_2 == 0)
-		{
-			rowswidth = 0;
-		}
-	}
+	// for(int i = 0; i < srcImage.rows; i++)
+	// {
+	// 	if(rowsharris_2 == 0)
+	// 	{
+	// 		rowswidth = 0;
+	// 	}
+	// }
 	
 	int *rowswidth_2 = new int[srcImage.cols];
 	memset(rowswidth_2, 0, srcImage.cols * 4);
@@ -1008,8 +1008,8 @@ IDENT_INTERFACE firstDetection(Mat src, bool debug)
     //存储结果
     IDENT_INTERFACE res;
 	res.target = 1;
-    int x = src.rows / 480; // 缩放比例
-
+    double x = double(src.rows) / 480; // 缩放比例
+    
     //时间戳
 	typedef std::chrono::high_resolution_clock Clock;
 
@@ -1021,6 +1021,7 @@ IDENT_INTERFACE firstDetection(Mat src, bool debug)
 	src = ImageSplit(src);
     Mat src_canny = ImageCanny(src);
 
+    //imwrite("canny.png", src_canny);
     //Mat src_tower = ImageSize(src, 1);
     //Mat src_re_tower = ImageSize(src_re, 1);
     //Mat src_tower_canny = ImageSize(src_canny, 1);
@@ -1037,6 +1038,7 @@ IDENT_INTERFACE firstDetection(Mat src, bool debug)
     
     res.x = t.first * x;
     res.y = t.second * x;
+    cout << x << endl;
     res.a = abs(region_x.second - region_x.first) * x;
     res.b = abs(region_y.second - region_y.first) * x;
 
@@ -1077,7 +1079,7 @@ IDENT_INTERFACE secondDetection(Mat src, bool debug)
     //存储结果
     IDENT_INTERFACE res;
 	res.target = 2;
-    int x = src.rows / 480; // 缩放比例
+    double x = double(src.rows) / 480; // 缩放比例
 
     //时间戳
     typedef std::chrono::high_resolution_clock Clock;
