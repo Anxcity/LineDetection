@@ -111,7 +111,7 @@ void Rotate(const Mat &srcImage, Mat &destImage, double angle)
 
 int main()
 {
-    string path = "./pictures/linetest.jpg";//角度图片路径
+    string path = "./pictures/2.jpg";//角度图片路径
     Mat src = imread(path);
     Mat src_bak = src.clone();
 
@@ -1016,8 +1016,8 @@ IDENT_INTERFACE firstDetection(Mat src, bool debug)
     res.angel = theta;
 	if(theta == 999)
 	{
-    	res.x = 999;
-    	res.y = 999;
+    	//res.x = 999;
+    	//res.y = 999;
 		return res; 
 	}
     auto t4 = Clock::now();
@@ -1078,8 +1078,8 @@ IDENT_INTERFACE secondDetection(Mat src, bool debug)
 
     if(mid == 999)
     {
-        res.x = 999;
-        res.y = 999;
+        //res.x = 999;
+        //res.y = 999;
         res.angel = 999;
     }
 
@@ -1173,8 +1173,8 @@ IDENT_INTERFACE thirdDetection(Mat src, bool debug)
 
 	if(para_line.size() == 0)
 	{
-        res.x = 999;
-        res.y = 999;
+        //res.x = 999;
+        //res.y = 999;
         res.angel = 999;
         return res;
 	}
@@ -1203,8 +1203,8 @@ IDENT_INTERFACE thirdDetection(Mat src, bool debug)
     //没有90度左右的平行线
     if(P_Line.size() == 0)
     {
-        res.x = 999;
-        res.y = 999;
+        //res.x = 999;
+        //res.y = 999;
         res.angel = 999;
         return res;
     }
