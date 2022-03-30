@@ -111,12 +111,40 @@ void Rotate(const Mat &srcImage, Mat &destImage, double angle)
 
 int main()
 {
-    string path = "./pictures/2.jpg";//角度图片路径
-    Mat src = imread(path);
-    Mat src_bak = src.clone();
+    VideoCapture cap;
+    cap.open("usb-camera.mp4"); //打开视频,以上两句等价于VideoCapture cap("E://2.avi");
+ 
+     //cap.open("http://www.laganiere.name/bike.avi");//也可以直接从网页中获取图片，前提是网页有视频，以及网速够快
+    if(!cap.isOpened())//如果视频不能正常打开则返回    
+    {
+        printf("NO video");
+        return 0;
+    }
+    Mat frame;
+    while(1)
+    {
+        cap>>frame;//等价于cap.read(frame);
+        if(frame.empty())//如果某帧为空则退出循环
+             break;
+        
+        Mat src = frame.clone();
+        Mat src_bak = frame.clone();
 
-    IDENT_INTERFACE res = Interface(src, 1, 1);
-    cout << res.target << " "<< res.x << " " << res.y << " " << res.a << " " << res.b << " " << res.angel << " " << endl;
+        IDENT_INTERFACE res = Interface(src, 1, 1);
+        cout << res.target << " "<< res.x << " " << res.y << " " << res.a << " " << res.b << " " << res.angel << " " << endl;
+    
+        imshow("result", res.image);
+        waitKey(20);//每帧延时20毫秒
+     }
+    cap.release();//释放资源
+    // string path = "./pictures/2.jpg";//角度图片路径
+    // Mat src = imread(path);
+    // Mat src_bak = src.clone();
+
+    // IDENT_INTERFACE res = Interface(src, 1, 1);
+    // cout << res.target << " "<< res.x << " " << res.y << " " << res.a << " " << res.b << " " << res.angel << " " << endl;
+    
+    
     // vector<double> firstRes = firstDetection(src);
     // for(int i = 0; i < 3; i++)
     //     cout << firstRes[i] <<" ";
@@ -987,6 +1015,7 @@ IDENT_INTERFACE firstDetection(Mat src, bool debug)
     //前置部分
 	auto t1 = Clock::now();
 	src = ImageSize(src, 1);
+    res.image = src;
 	Mat src_re = src;
 	src = ImageSplit(src);
     Mat src_canny = ImageCanny(src);
@@ -1032,6 +1061,7 @@ IDENT_INTERFACE firstDetection(Mat src, bool debug)
         string text = "angel: " + to_string(theta) + " x: " + to_string(res.x) + " y: " + to_string(res.y);
         putText(src_re, text, Point(10,60), FONT_HERSHEY_SIMPLEX, 1 , (0,0,255), 2 , 8);
 	    rectangle(src_re, Point(region_x.first, region_y.first), Point(region_x.second, region_y.second), Scalar( 0, 0, 255), 2, 8);//绘制塔架区域
+        res.image = src_re;
         //imwrite("first.png", src_re);
     }
 
@@ -1052,6 +1082,7 @@ IDENT_INTERFACE secondDetection(Mat src, bool debug)
     auto t1 = Clock::now();
 
 	src = ImageSize(src, 1);
+    res.image = src;
 	Mat src_re = src;
 	src = ImageSplit(src);
     Mat src_canny = ImageCanny(src);
@@ -1152,6 +1183,7 @@ IDENT_INTERFACE thirdDetection(Mat src, bool debug)
 {
     IDENT_INTERFACE res;
 	res.target = 3;
+    
 
     //时间戳
     typedef std::chrono::high_resolution_clock Clock;
@@ -1159,6 +1191,7 @@ IDENT_INTERFACE thirdDetection(Mat src, bool debug)
 
     //前置
     src = ImageSize(src, 1);
+    res.image = src;
 	Mat src_re = src;
 	src = ImageSplit(src);
     Mat src_canny = ImageCanny(src);
