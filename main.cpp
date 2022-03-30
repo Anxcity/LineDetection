@@ -1038,7 +1038,6 @@ IDENT_INTERFACE firstDetection(Mat src, bool debug)
     
     res.x = t.first * x;
     res.y = t.second * x;
-    cout << x << endl;
     res.a = abs(region_x.second - region_x.first) * x;
     res.b = abs(region_y.second - region_y.first) * x;
 
