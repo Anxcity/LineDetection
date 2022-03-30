@@ -111,7 +111,7 @@ void Rotate(const Mat &srcImage, Mat &destImage, double angle)
 
 int main()
 {
-    string path = "./pictures/line156.jpg";//角度图片路径
+    string path = "./pictures/linetest.jpg";//角度图片路径
     Mat src = imread(path);
     Mat src_bak = src.clone();
 
@@ -445,6 +445,10 @@ double GetTheta(Mat &src, Mat src_canny)
     vector<Vec4d> para_line;
     para_line = GetParaLine(line_data);
 
+	if(para_line.size() == 0)
+	{
+		return 999;
+	}
     //合并平行线
     para_line = MergeParaLine(para_line);
     //cout << para_line.size() << endl;
@@ -485,11 +489,17 @@ double GetTheta(Mat &src, Mat src_canny)
 double DrawLine(Mat &src, Mat src_canny, Region region_x)
 {
     //霍夫直线检测初步处理
-    vector<Vec4d> line_data = HoughSecondStep(src_canny);
+    vector<Vec4d> line_data; 
+	line_data = HoughSecondStep(src_canny);
 
     //平行线组
-    vector<Vec4d> para_line = GetParaLine(line_data);
+    vector<Vec4d> para_line;
+	para_line = GetParaLine(line_data);
 
+	if(para_line.size() == 0)
+	{
+		return 999;
+	}
     //合并平行线
     para_line = MergeParaLine(para_line);
     //cout << para_line.size() << endl;
@@ -1001,8 +1011,15 @@ IDENT_INTERFACE firstDetection(Mat src, bool debug)
 
     //线检测
 	auto t3 = Clock::now();
-    double theta = GetTheta(src_re, src_canny);
+    double theta;
+	theta = GetTheta(src_re, src_canny);
     res.angel = theta;
+	if(theta == 999)
+	{
+    	res.x = 999;
+    	res.y = 999;
+		return res; 
+	}
     auto t4 = Clock::now();
 
 	cout << "步骤一前置时间为：" << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e+9 <<'\n';
@@ -1065,6 +1082,7 @@ IDENT_INTERFACE secondDetection(Mat src, bool debug)
         res.y = 999;
         res.angel = 999;
     }
+
     else
     {
         //cout<<center.first<<" "<<center.second<<endl;
@@ -1153,6 +1171,13 @@ IDENT_INTERFACE thirdDetection(Mat src, bool debug)
     vector<Vec4d> para_line;
     para_line = GetParaLine(line_data);
 
+	if(para_line.size() == 0)
+	{
+        res.x = 999;
+        res.y = 999;
+        res.angel = 999;
+        return res;
+	}
     //合并平行线
     para_line = MergeParaLine(para_line);
     //cout << para_line.size() << endl;
