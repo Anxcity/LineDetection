@@ -130,12 +130,12 @@ int main()
         Mat src = frame.clone();
         Mat src_bak = frame.clone();
 
-        IDENT_INTERFACE res = Interface(src, 1, 1);
+        IDENT_INTERFACE res = Interface(src, 2, 1);
         cout << res.target << " "<< res.x << " " << res.y << " " << res.a << " " << res.b << " " << res.angel << " " << endl;
     
         imshow("result", res.image);
         waitKey(20);//每帧延时20毫秒
-     }
+    }
     cap.release();//释放资源
     // string path = "./pictures/2.jpg";//角度图片路径
     // Mat src = imread(path);
@@ -232,7 +232,7 @@ Mat ImageSize(Mat src, int k)//设置图像大小
 {
 	Mat dst;
     if(k == 1)
-        resize(src, dst, Size(640, 360));
+        resize(src, dst, Size(640, 480));
     else if(k == 2)
 	    resize(src, dst, Size(1920, 1080));
 	return dst;
@@ -552,8 +552,8 @@ double DrawLine(Mat &src, Mat src_canny, Region region_x)
 
     int Right = 0;
     double Min = -1;
-    region_x.first = region_x.first;
-    region_x.second = region_x.second;
+    //region_x.first = region_x.first;
+    //region_x.second = region_x.second;
     for (int i = 0; i < P_Line.size(); i++)
 	{
         Vec4f temp = P_Line[i];
@@ -911,38 +911,38 @@ Region tower_detection(Mat src, Mat src_re, Mat src_canny, Mat src_harris, Regio
 	center.first = (region_x.first + region_x.second) / 2;
 	center.second = (region_y.first + region_y.second) / 2;
 	//cout<<center.first<<" "<<center.second<<endl;
-	circle( src_re, Point(center.first, center.second), 5,  Scalar(0, 0, 255), 1, 8, 0 );
-	Region res;//first为横向返回值（向右为1，向左为-1），second为纵向返回值（向上为1，向下为-1）
-	int width = 10; //中心区域宽度
-	if(center.first <= src.cols/2 - width)
-	{
-		res.first = -1;
-	}
-	else if(center.first <= src.cols/2 + width)
-	{
-		res.first = 0;
-	}
-	else
-	{
-		res.first = 1;
-	}
-	if(center.second <= src.rows - width)
-	{
-		res.second = 1;
-	}
-	else if(res.second <= src.rows + width)
-	{
-		res.second = 0;
-	}
-	else
-	{
-		res.second = -1;
-	}
+	// circle( src_re, Point(center.first, center.second), 5,  Scalar(0, 0, 255), 1, 8, 0 );
+	//Region res;//first为横向返回值（向右为1，向左为-1），second为纵向返回值（向上为1，向下为-1）
+	// int width = 10; //中心区域宽度
+	// if(center.first <= src.cols/2 - width)
+	// {
+	// 	res.first = -1;
+	// }
+	// else if(center.first <= src.cols/2 + width)
+	// {
+	// 	res.first = 0;
+	// }
+	// else
+	// {
+	// 	res.first = 1;
+	// }
+	// if(center.second <= src.rows - width)
+	// {
+	// 	res.second = 1;
+	// }
+	// else if(res.second <= src.rows + width)
+	// {
+	// 	res.second = 0;
+	// }
+	// else
+	// {
+	// 	res.second = -1;
+	// }
 	//cout<<res.first<<" "<<res.second<<endl;
 	//imshow("塔架区域", src_re);
 	//imwrite("Region.png", src_re);
     //waitKey(0);
-	return res;
+	return center;
 }
 
 Region tower_detection_two(Mat src, Mat src_re, Mat src_canny, Mat src_harris, Region region_x, Region region_y)//塔架检测函数，返回值为一对正负1点对，first为横向返回值（向右为1，向左为-1），second为纵向返回值（向上为1，向下为-1）
@@ -967,38 +967,38 @@ Region tower_detection_two(Mat src, Mat src_re, Mat src_canny, Mat src_harris, R
 	center.first = (region_x.first + region_x.second) / 2;
 	center.second = (region_y.first + region_y.second) / 2;
 	//cout<<center.first<<" "<<center.second<<endl;
-	circle( src_re, Point(center.first, center.second), 5,  Scalar(0, 0, 255), 1, 8, 0 );
-	Region res;//first为横向返回值（向右为1，向左为-1），second为纵向返回值（向上为1，向下为-1）
-	int width = 10; //中心区域宽度
-	if(center.first <= src.cols/2 - width)
-	{
-		res.first = -1;
-	}
-	else if(center.first <= src.cols/2 + width)
-	{
-		res.first = 0;
-	}
-	else
-	{
-		res.first = 1;
-	}
-	if(center.second <= src.rows - width)
-	{
-		res.second = 1;
-	}
-	else if(res.second <= src.rows + width)
-	{
-		res.second = 0;
-	}
-	else
-	{
-		res.second = -1;
-	}
+	// circle( src_re, Point(center.first, center.second), 5,  Scalar(0, 0, 255), 1, 8, 0 );
+	// Region res;//first为横向返回值（向右为1，向左为-1），second为纵向返回值（向上为1，向下为-1）
+	// int width = 10; //中心区域宽度
+	// if(center.first <= src.cols/2 - width)
+	// {
+	// 	res.first = -1;
+	// }
+	// else if(center.first <= src.cols/2 + width)
+	// {
+	// 	res.first = 0;
+	// }
+	// else
+	// {
+	// 	res.first = 1;
+	// }
+	// if(center.second <= src.rows - width)
+	// {
+	// 	res.second = 1;
+	// }
+	// else if(res.second <= src.rows + width)
+	// {
+	// 	res.second = 0;
+	// }
+	// else
+	// {
+	// 	res.second = -1;
+	// }
 	//cout<<res.first<<" "<<res.second<<endl;
 	//imshow("塔架区域", src_re);
 	//imwrite("Region.png", src_re);
     //waitKey(0);
-	return res;
+	return center;
 }
 
 
@@ -1008,6 +1008,7 @@ IDENT_INTERFACE firstDetection(Mat src, bool debug)
     //存储结果
     IDENT_INTERFACE res;
 	res.target = 1;
+    int x = src.rows / 480; // 缩放比例
 
     //时间戳
 	typedef std::chrono::high_resolution_clock Clock;
@@ -1033,10 +1034,11 @@ IDENT_INTERFACE firstDetection(Mat src, bool debug)
 	region_y = HorizonProjection(src_canny, src_harris);
 
     Region t = tower_detection(src, src_re, src_canny, src_harris, region_x, region_y);
-    res.x = t.first;
-    res.y = t.second;
-    res.a = abs(region_x.second - region_x.first) * 3;
-    res.b = abs(region_y.second - region_y.first) * 3;
+    
+    res.x = t.first * x;
+    res.y = t.second * x;
+    res.a = abs(region_x.second - region_x.first) * x;
+    res.b = abs(region_y.second - region_y.first) * x;
 
     //线检测
 	auto t3 = Clock::now();
@@ -1061,6 +1063,7 @@ IDENT_INTERFACE firstDetection(Mat src, bool debug)
         string text = "angel: " + to_string(theta) + " x: " + to_string(res.x) + " y: " + to_string(res.y);
         putText(src_re, text, Point(10,60), FONT_HERSHEY_SIMPLEX, 1 , (0,0,255), 2 , 8);
 	    rectangle(src_re, Point(region_x.first, region_y.first), Point(region_x.second, region_y.second), Scalar( 0, 0, 255), 2, 8);//绘制塔架区域
+        circle( src_re, Point(t.first, t.second), 5,  Scalar(0, 0, 255), 1, 8, 0 );
         res.image = src_re;
         //imwrite("first.png", src_re);
     }
@@ -1074,6 +1077,7 @@ IDENT_INTERFACE secondDetection(Mat src, bool debug)
     //存储结果
     IDENT_INTERFACE res;
 	res.target = 2;
+    int x = src.rows / 480; // 缩放比例
 
     //时间戳
     typedef std::chrono::high_resolution_clock Clock;
@@ -1097,7 +1101,7 @@ IDENT_INTERFACE secondDetection(Mat src, bool debug)
 
     //塔检测 
     auto t2 = Clock::now();
-    Region t = tower_detection_two(src, src_re, src_canny, src_harris, region_x, region_y);
+    //Region t = tower_detection_two(src, src_re, src_canny, src_harris, region_x, region_y);
 
     //线
     auto t3 = Clock::now();
@@ -1117,42 +1121,16 @@ IDENT_INTERFACE secondDetection(Mat src, bool debug)
     else
     {
         //cout<<center.first<<" "<<center.second<<endl;
-        Region result;//first为横向返回值（向右为1，向左为-1），second为纵向返回值（向上为1，向下为-1）
-        int width = 10; //中心区域宽度
-        if(center.first <= src.cols/2 - width)
-        {
-            result.first = -1;
-        }
-        else if(center.first <= src.cols/2 + width)
-        {
-            result.first = 0;
-        }
-        else
-        {
-            result.first = 1;
-        }
-        if(center.second <= src.rows - width)
-        {
-            result.second = 1;
-        }
-        else if(result.second <= src.rows + width)
-        {
-            result.second = 0;
-        }
-        else
-        {
-            result.second = -1;
-        }
-        res.x = result.first;
-        res.y = result.second;
+        res.x = center.first * x;
+        res.y = center.second * x;
         res.angel = 0;
 
     }
 
     auto t4 = Clock::now(); 
 	    //cout<<center.first<<" "<<center.second<<endl;
-    res.a = abs(region_x.second - region_x.first) * 3;
-    res.b = abs(region_y.second - region_y.first) * 3;
+    res.a = abs(region_x.second - region_x.first) * x;
+    res.b = abs(region_y.second - region_y.first) * x;
     if(debug)
     {
 
@@ -1179,7 +1157,6 @@ IDENT_INTERFACE thirdDetection(Mat src, bool debug)
 {
     IDENT_INTERFACE res;
 	res.target = 3;
-    
 
     //时间戳
     typedef std::chrono::high_resolution_clock Clock;
@@ -1260,8 +1237,6 @@ IDENT_INTERFACE thirdDetection(Mat src, bool debug)
                 theta = theta - 90;
         }   
 	}   
-
-
 
     auto t2 = Clock::now();
     cout << "步骤三时间为：" << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e+9 <<'\n';
