@@ -75,13 +75,12 @@ double DrawLine(Mat &src, Mat src_canny, Region region_x);
 //角点检测
 Mat ImageHarris(Mat src);
 //垂直积分投影
-Region VerticalProjection(Mat srcImage, Mat src_harris);
+Region VerticalProjection(Mat srcImage);
 //水平积分投影
-Region HorizonProjection(Mat srcImage, Mat src_harris);
+Region HorizonProjection(Mat srcImage);
 //塔架检测函数，返回值为一对正负1点对，first为横向返回值（向右为1，向左为-1），second为纵向返回值（向上为1，向下为-1）
-Region tower_detection(Mat src, Mat src_re, Mat src_canny, Mat src_harris, Region region_x, Region region_y);
-//第二步塔检测函数
-Region tower_detection_two(Mat src, Mat src_re, Mat src_canny, Mat src_harris, Region region_x, Region region_y);
+Region tower_detection(Mat src, Mat src_re, Mat src_canny, Region region_x, Region region_y);
+
 
 /***
  *  整合部分
@@ -105,14 +104,15 @@ void Rotate(const Mat &srcImage, Mat &destImage, double angle)
 	Mat M = getRotationMatrix2D(center, angle, 1);//计算旋转的仿射变换矩阵 
 	warpAffine(srcImage, destImage, M, Size(srcImage.cols, srcImage.rows));//仿射变换  
 	circle(destImage, center, 2, Scalar(255, 0, 0));
-}
+} 
+
 
 
 
 int main()
 {
     VideoCapture cap;
-    cap.open("usb-camera.mp4"); //打开视频,以上两句等价于VideoCapture cap("E://2.avi");
+    cap.open("test.mp4"); //打开视频,以上两句等价于VideoCapture cap("E://2.avi");
  
      //cap.open("http://www.laganiere.name/bike.avi");//也可以直接从网页中获取图片，前提是网页有视频，以及网速够快
     if(!cap.isOpened())//如果视频不能正常打开则返回    
@@ -130,7 +130,7 @@ int main()
         Mat src = frame.clone();
         Mat src_bak = frame.clone();
 
-        IDENT_INTERFACE res = Interface(src, 1, 1);
+        IDENT_INTERFACE res = Interface(src, 2, 1);
         cout << res.target << " "<< res.x << " " << res.y << " " << res.a << " " << res.b << " " << res.angel << " " << endl;
     
         imshow("result", res.image);
@@ -191,7 +191,8 @@ bool InOneLine(double k, double b , double k2, double b2, double K)
             return true;
     }  
     return false;
-}
+} 
+
 
 double Mean(vector<double> resultSet)
 {
@@ -214,7 +215,7 @@ double Variance(vector<double> resultSet, double mean)
 double StandardDev(double variance)
 {
 	double stdev = sqrt(variance); //标准差
-    return stdev;
+    return stdev; 
 }
 
 void Zscore(vector<double>& vec)
@@ -232,7 +233,7 @@ Mat ImageSize(Mat src, int k)//设置图像大小
 {
 	Mat dst;
     if(k == 1)
-        resize(src, dst, Size(640, 480));
+        resize(src, dst, Size(800, 600));
     else if(k == 2)
 	    resize(src, dst, Size(1920, 1080));
 	return dst;
@@ -254,6 +255,7 @@ Mat ImageSplit(Mat srcImage)//通道分离
 
 Mat ImageCanny(Mat src)//边缘检测
 {
+
 	Mat dst;
 	Mat src_gray;
     cvtColor(src, src_gray, WINDOW_AUTOSIZE);
@@ -290,7 +292,7 @@ vector<Vec4d> HoughSecondStep(Mat src)
     //角度
     //HoughLinesP(src, line_data, 1, CV_PI/180.0, 100, 80 ,5);
     //线
-    HoughLinesP(src, line_data, 1, CV_PI/180.0, 50, 50 ,15);
+    HoughLinesP(src, line_data, 1, CV_PI/180.0, 30, 30 ,15);
     //HoughLines(src_canny, line_data, 1, CV_PI/180.0, 300, W_min ,W_max);
 
     //cout << line_data.size() << endl;
@@ -425,14 +427,14 @@ double GetKmeansTheta(vector<Vec4d> para_line, vector<double> k_tan_bak, Mat& sr
     // for(int i = 0; i < K; i++)
     //     cout << stdev[i] << endl;
     
-    int total_points_cluster =  clusters[MAX_2].getTotalPoints();
+    //int total_points_cluster =  clusters[MAX_2].getTotalPoints();
     //cout << total_points_cluster << endl;
     //cout << "Cluster " << clusters[i].getID() + 1 << endl;
-    for(int j = 0; j < total_points_cluster; ++j)
-    {
+   // for(int j = 0; j < total_points_cluster; ++j)
+    //{
         //cout << "Point " << clusters[i].getPoint(j).getID() + 1 << ": ";
                     
-        Vec4f temp = para_line[clusters[MAX_2].getPoint(j).getID()];
+        //Vec4f temp = para_line[clusters[MAX_2].getPoint(j).getID()];
         //if(abs(clusters[i].getPoint(j).getValue(0) - clusters[i].getCentralValue(0)) < 2)
             //line(src, Point(temp[0], temp[1]), Point(temp[2], temp[3]), Scalar(255, 0, 0), 2, CV_AA);     
 
@@ -440,13 +442,13 @@ double GetKmeansTheta(vector<Vec4d> para_line, vector<double> k_tan_bak, Mat& sr
             //cout << clusters[i].getPoint(j).getValue(p) << " ";
             //cout << k_tan_bak[clusters[i].getPoint(j).getID()] << " ";
 
-            string point_name = clusters[MAX_2].getPoint(j).getName();
+            //string point_name = clusters[MAX_2].getPoint(j).getName();
 
                     //if(point_name != "")
                         //cout << "- " << point_name;
 
                     //cout << endl;
-    }
+    //}
 
     return clusters[MAX_2].getCentralValue(0);
 }
@@ -475,8 +477,8 @@ double GetTheta(Mat &src, Mat src_canny)
 
 	if(para_line.size() == 0)
 	{
-		return 999;
-	}
+		return 999; 
+    }
     //合并平行线
     para_line = MergeParaLine(para_line);
     //cout << para_line.size() << endl;
@@ -550,7 +552,6 @@ double DrawLine(Mat &src, Mat src_canny, Region region_x)
     if(P_Line.size() == 0)
         return 999;
 
-    int Right = 0;
     double Min = -1;
     //region_x.first = region_x.first;
     //region_x.second = region_x.second;
@@ -569,14 +570,13 @@ double DrawLine(Mat &src, Mat src_canny, Region region_x)
         if(x_top > Min && x_top < region_x.second && x_top > region_x.first && x_bound < region_x.second && x_bound > region_x.first)
         //if(x_top > Min)
         {
-            Min = x_top;
-            Right = i; 
+            Min = x_top;         
         }   
-	}   
+    }
     //cout << Min << endl; 
     //cout << Right << endl;
-    Rect rect(Min-15, 5, 30, src.rows);//左上坐标（x,y）和矩形的长(x)宽(y)
-    cv::rectangle(src, rect, Scalar(0, 0, 255), 3, LINE_8,0);
+    //Rect rect(Min-15, 5, 30, src.rows);//左上坐标（x,y）和矩形的长(x)宽(y)
+    //cv::rectangle(src, rect, Scalar(0, 0, 255), 3, LINE_8,0);
 
     return Min;
 }
@@ -609,7 +609,7 @@ Mat ImageHarris(Mat src)//角点检测
 	return dst_norm_scaled;
 }
 
-Region VerticalProjection(Mat srcImage, Mat src_harris)//垂直积分投影
+Region VerticalProjection(Mat srcImage)//垂直积分投影
 {
 	Region region_x;//记录区域左右边界的横坐标
 	//对边缘图进行投影
@@ -635,42 +635,42 @@ Region VerticalProjection(Mat srcImage, Mat src_harris)//垂直积分投影
 	}
 
 	//对角点图进行垂直投影
-	if (src_harris.channels() > 1)
-		cvtColor(src_harris, src_harris, COLOR_RGB2GRAY);
-	Mat src_harrisBin;
-	threshold(src_harris, src_harrisBin, 120, 255, THRESH_BINARY_INV);
-	int *cols_harris = new int[srcImage.cols];  //申请src.image.cols个int型的内存空间
-	memset(cols_harris, 0, srcImage.cols * 4);  //数组必须赋初值为零，否则出错。无法遍历数组。
+	// if (src_harris.channels() > 1)
+	// 	cvtColor(src_harris, src_harris, COLOR_RGB2GRAY);
+	// Mat src_harrisBin;
+	// threshold(src_harris, src_harrisBin, 120, 255, THRESH_BINARY_INV);
+	// int *cols_harris = new int[srcImage.cols];  //申请src.image.cols个int型的内存空间
+	// memset(cols_harris, 0, srcImage.cols * 4);  //数组必须赋初值为零，否则出错。无法遍历数组。
 	
-	for (int i = 0; i < srcImage.cols; i++)
-	for (int j = 0; j < srcImage.rows; j++)
-	{
-		value = src_harrisBin.at<uchar>(j, i);
-		if (value == 0)
-		{
-			cols_harris[i]++; //统计每列的白色像素点  
-		}
-	}
+	// for (int i = 0; i < srcImage.cols; i++)
+	// for (int j = 0; j < srcImage.rows; j++)
+	// {
+	// 	value = src_harrisBin.at<uchar>(j, i);
+	// 	if (value == 0)
+	// 	{
+	// 		cols_harris[i]++; //统计每列的白色像素点  
+	// 	}
+	// }
 
 	int *colswidth_2 = new int[srcImage.cols];
 	memset(colswidth_2, 0, srcImage.cols * 4);
 	memcpy(colswidth_2, colswidth, sizeof(colswidth_2));
 
-	int *cols_harris_2 = new int[srcImage.cols];
-	memset(cols_harris_2, 0, srcImage.cols * 4);
-	memcpy(cols_harris_2, cols_harris, sizeof(cols_harris_2));
+	// int *cols_harris_2 = new int[srcImage.cols];
+	// memset(cols_harris_2, 0, srcImage.cols * 4);
+	// memcpy(cols_harris_2, cols_harris, sizeof(cols_harris_2));
 	
 	int ct; 
 	//对相邻10列高度取平均值
-	for (int i = 4; i < srcImage.cols - 6; i++)
-	{
-		ct = 0;
-		for(int j = -4; j < 6 ; j++)
-		{
-			ct = ct + cols_harris[i + j] * 2;
-		}
-		cols_harris_2[i] = ct/10; 
-	}
+	// for (int i = 4; i < srcImage.cols - 6; i++)
+	// {
+	// 	ct = 0;
+	// 	for(int j = -4; j < 6 ; j++)
+	// 	{
+	// 		ct = ct + cols_harris[i + j] * 2;
+	// 	}
+	// 	cols_harris_2[i] = ct/10; 
+	// }
 	//对边缘图和角点图取交集，如果该列角点数为0，将边缘数也设置为0
 	// for(int i = 0; i < srcImage.cols; i++)
 	// {
@@ -681,10 +681,10 @@ Region VerticalProjection(Mat srcImage, Mat src_harris)//垂直积分投影
 	// }
 	
 	//将取交集后的边缘投影图平滑化处理
-	for (int i = 4; i < srcImage.cols - 6; i++)
+	for (int i = 4; i < srcImage.cols - 5; i++)
 	{
 		ct = 0;
-		for(int j = -4; j < 6 ; j++)
+		for(int j = -4; j < 5 ; j++)
 		{
 			ct = ct + colswidth[i + j];
 		}
@@ -704,21 +704,12 @@ Region VerticalProjection(Mat srcImage, Mat src_harris)//垂直积分投影
 		value = 0;  //直方图设置为黑色
 		histogramImage_2.at<uchar>(srcImage.rows - 1 - j, i) = value;
 	}
-	//imwrite("垂直平均投影图.png", histogramImage_2);
+	//imshow("垂直平均投影图", histogramImage_2);
 
 	int window_size = 40;
 	ct = 0;
 	int average = 0;
-	//计算平均条形高度（只计算高度不为0的列）
-	for (int i = 0; i < srcImage.cols; i++)
-	{
-		if(colswidth_2[i] > 0)
-		{
-			ct++;
-			average = average + colswidth_2[i];
-		}
-	}
-	average = average/ct;
+	
 	int difference = 0;//相邻两区域间的落差
 	int increase = 0;//最大升高落差（区域左侧边缘）
 	int drop = 0;//最大下降落差（区域右侧边缘）
@@ -732,28 +723,52 @@ Region VerticalProjection(Mat srcImage, Mat src_harris)//垂直积分投影
 		{
 			ct = ct + colswidth_2[j + i * window_size];
 		}
-		area.push_back(ct);   
+		area.push_back(ct);
+		average = average + ct;   
 	}
-	for (int i = 0; i < area.size() -  2; i++)//遍历小区域，寻找最大升高和下降落差，最大落差所在的小区域即为塔架边缘
+	average = average / area_size;
+	int flag_left, flag_right, flag_mid;
+	for( int i = 0; i < area.size() - 1; i++)
 	{
-		difference = area[i + 1] - area[i];
+		if(area[i] >= average)
+		{
+			flag_left = i;
+			break;
+		}
+	}
+	for( int i = area_size -1; i > 0; i--)
+	{
+		if(area[i] > average)
+		{
+			flag_right = i;
+			break;
+		}
+	}
+	flag_mid = (flag_left + flag_right) / 2;
+	for (int i = 0; i <= flag_mid; i++)//遍历小区域，寻找最大升高和下降落差，最大落差所在的小区域即为塔架边缘
+	{
+		difference = abs(area[i + 1] - area[i]);
 		if(difference > increase)
 		{
 			increase = difference;
-			region_x.first = window_size * (i + 1) - 1;
-		}
-		if(difference < drop)
-		{
-			drop = difference;
-			region_x.second = window_size * (i + 2) - 1;
+			region_x.first = window_size * (i - 2);
 		}
 	}
-	//imwrite("VP.png", histogramImage_2);
-	//cout<<region_x.second - region_x.first<<endl; 
+	difference = 0;
+	increase = 0;
+	for(int i = flag_mid; i < area_size -2; i++)
+	{
+		difference = abs(area[i + 1] - area[i]);
+		if(difference > increase)
+		{
+			increase = difference;
+			region_x.second = window_size * (i + 3);
+		}
+	}
 	return region_x;
 }
 
-Region HorizonProjection(Mat srcImage, Mat src_harris)//水平积分投影
+Region HorizonProjection(Mat srcImage)//水平积分投影
 {
 	Region region_y;
 	//对边缘图进行水平投影
@@ -777,36 +792,36 @@ Region HorizonProjection(Mat srcImage, Mat src_harris)//水平积分投影
 	}
 
 	//对角点图进行水平投影
-	if (srcImage.channels() > 1)
-		cvtColor(src_harris, src_harris, COLOR_RGB2GRAY);
-	Mat src_harrisBin;
-	threshold(src_harris, src_harrisBin, 120, 255, THRESH_BINARY_INV);
-	int *rows_harris = new int[srcImage.rows];  //申请src.image.rows个int型的内存空间
-	memset(rows_harris, 0, srcImage.rows * 4);  //数组必须赋初值为零，否则出错。无法遍历数组。
-	for (int i = 0; i<srcImage.rows; i++)
-	for (int j = 0; j<srcImage.cols; j++)
-	{
-		value = src_harrisBin.at<uchar>(i, j);
-		if (value == 0)
-		{
-			rows_harris[i]++; //统计每行的白色像素点  
-		}
-	}
+	// if (srcImage.channels() > 1)
+	// 	cvtColor(src_harris, src_harris, COLOR_RGB2GRAY);
+	// Mat src_harrisBin;
+	// threshold(src_harris, src_harrisBin, 120, 255, THRESH_BINARY_INV);
+	// int *rows_harris = new int[srcImage.rows];  //申请src.image.rows个int型的内存空间
+	// memset(rows_harris, 0, srcImage.rows * 4);  //数组必须赋初值为零，否则出错。无法遍历数组。
+	// for (int i = 0; i<srcImage.rows; i++)
+	// for (int j = 0; j<srcImage.cols; j++)
+	// {
+	// 	value = src_harrisBin.at<uchar>(i, j);
+	// 	if (value == 0)
+	// 	{
+	// 		rows_harris[i]++; //统计每行的白色像素点  
+	// 	}
+	// }
 
 	int ct; //记录相邻10列的直方图高度
-	int *rowsharris_2 = new int[srcImage.cols];
-	memset(rowsharris_2, 0, srcImage.cols * 4);
-	memcpy(rowsharris_2, rowswidth, sizeof(rowsharris_2));
+	// int *rowsharris_2 = new int[srcImage.cols];
+	// memset(rowsharris_2, 0, srcImage.cols * 4);
+	// memcpy(rowsharris_2, rowswidth, sizeof(rowsharris_2));
 	//对相邻10列高度取平均值
-	for (int i = 4; i < srcImage.rows - 6; i++)
-	{
-		ct = 0;
-		for(int j = -4; j < 6 ; j++)
-		{
-			ct = ct + rows_harris[i + j] * 2;
-		}
-		rowsharris_2[i] = ct/10; 
-	}
+	// for (int i = 4; i < srcImage.rows - 6; i++)
+	// {
+	// 	ct = 0;
+	// 	for(int j = -4; j < 6 ; j++)
+	// 	{
+	// 		ct = ct + rows_harris[i + j] * 2;
+	// 	}
+	// 	rowsharris_2[i] = ct/10; 
+	// }
 	//对边缘图和角点图取交集，如果该列角点数为0，将边缘数也设置为0
 	// for(int i = 0; i < srcImage.rows; i++)
 	// {
@@ -843,19 +858,9 @@ Region HorizonProjection(Mat srcImage, Mat src_harris)//水平积分投影
 		histogramImage_2.at<uchar>(i, j) = value;
 	}
 
-	int window_size = 20;
+	int window_size = 30;
 	ct = 0;
 	int average = 0;
-	//计算平均条形高度（只计算高度不为0的列）
-	for (int i = 0; i < srcImage.rows; i++)
-	{
-		if(rowswidth_2[i] > 0)
-		{
-			ct++;
-			average = average + rowswidth_2[i];
-		}
-	}
-	average = average/ct;
 	int difference = 0, increase = 0, drop = 0;//相邻两区域间的落差
 	vector<int>area;
 	int area_size;
@@ -868,28 +873,53 @@ Region HorizonProjection(Mat srcImage, Mat src_harris)//水平积分投影
 			ct = ct + rowswidth_2[j + i * window_size];
 		}
 		area.push_back(ct);   
+		average = average + ct;
 	}
-	for (int i = 0; i < area.size() -  2; i++)
+	average = average / area_size;
+	int flag_up, flag_down, flag_mid;
+	for( int i = 0; i < area.size() - 1; i++)
 	{
-		difference = area[i + 1] - area[i];
+		if(area[i] >= average)
+		{
+			flag_up = i;
+			break;
+		}
+	}
+	for( int i = area_size -1; i > 0; i--)
+	{
+		if(area[i] > average)
+		{
+			flag_down = i;
+			break;
+		}
+	}
+	flag_mid = (flag_up + flag_down) / 2;
+	
+	for (int i = 0; i <= flag_mid; i++)//遍历小区域，寻找最大升高和下降落差，最大落差所在的小区域即为塔架边缘
+	{
+		difference = abs(area[i + 1] - area[i]);
 		if(difference > increase)
 		{
 			increase = difference;
-			region_y.first = window_size * i - 1;
+			region_y.first = window_size * i ;
 		}
-		if(difference < drop)
+		
+	}
+	difference = 0;
+	increase = 0;
+	for(int i = flag_mid; i < area_size -2; i++)
+	{
+		difference = abs(area[i + 1] - area[i]);
+		if(difference > increase)
 		{
-			drop = difference;
-			region_y.second = window_size * (i + 1) - 1;
+			increase = difference;
+			region_y.second = window_size * (i + 1) ;
 		}
 	}
-	//imshow("水平平均投影图", histogramImage_2);
-	//imwrite("HP.png", histogramImage_2);
-	//cout<<region_y.second - region_y.first<<endl;
 	return region_y;
 }
 
-Region tower_detection(Mat src, Mat src_re, Mat src_canny, Mat src_harris, Region region_x, Region region_y)//塔架检测函数，返回值为一对正负1点对，first为横向返回值（向右为1，向左为-1），second为纵向返回值（向上为1，向下为-1）
+Region tower_detection(Mat src, Mat src_re, Mat src_canny, Region region_x, Region region_y)//塔架检测函数，返回值为一对正负1点对，first为横向返回值（向右为1，向左为-1），second为纵向返回值（向上为1，向下为-1）
 {
 	//Mat src_re;//src为输入图像 src_re为绘制检测区域的图像
     //src = imread("/home/ppzsml/TT/001.jpg");
@@ -945,61 +975,6 @@ Region tower_detection(Mat src, Mat src_re, Mat src_canny, Mat src_harris, Regio
 	return center;
 }
 
-Region tower_detection_two(Mat src, Mat src_re, Mat src_canny, Mat src_harris, Region region_x, Region region_y)//塔架检测函数，返回值为一对正负1点对，first为横向返回值（向右为1，向左为-1），second为纵向返回值（向上为1，向下为-1）
-{
-	//Mat src_re;//src为输入图像 src_re为绘制检测区域的图像
-    //src = imread("/home/ppzsml/TT/001.jpg");
-	// src = ImageSize(src);
-	// src_re = src;
-	// src = ImageSplit(src);
-	
-	//Mat src_canny;
-	// Mat src_harris;
-	// //src_canny = ImageCanny(src);
-	// src_harris = ImageHarris(src);
-	
-	// Region region_x, region_y;//x为区域横坐标 y为区域纵坐标
-	// region_x = VerticalProjection(src_canny, src_harris);
-	// region_y = HorizonProjection(src_canny, src_harris);
-	
-	rectangle(src_re, Point(region_x.first, region_y.first), Point(region_x.second, region_y.second), Scalar( 0, 0, 255), 1, 8);//绘制塔架区域
-	Region center;
-	center.first = (region_x.first + region_x.second) / 2;
-	center.second = (region_y.first + region_y.second) / 2;
-	//cout<<center.first<<" "<<center.second<<endl;
-	// circle( src_re, Point(center.first, center.second), 5,  Scalar(0, 0, 255), 1, 8, 0 );
-	// Region res;//first为横向返回值（向右为1，向左为-1），second为纵向返回值（向上为1，向下为-1）
-	// int width = 10; //中心区域宽度
-	// if(center.first <= src.cols/2 - width)
-	// {
-	// 	res.first = -1;
-	// }
-	// else if(center.first <= src.cols/2 + width)
-	// {
-	// 	res.first = 0;
-	// }
-	// else
-	// {
-	// 	res.first = 1;
-	// }
-	// if(center.second <= src.rows - width)
-	// {
-	// 	res.second = 1;
-	// }
-	// else if(res.second <= src.rows + width)
-	// {
-	// 	res.second = 0;
-	// }
-	// else
-	// {
-	// 	res.second = -1;
-	// }
-	//cout<<res.first<<" "<<res.second<<endl;
-	//imshow("塔架区域", src_re);
-	//imwrite("Region.png", src_re);
-    //waitKey(0);
-	return center;
-}
 
 
 //整合函数
@@ -1008,7 +983,7 @@ IDENT_INTERFACE firstDetection(Mat src, bool debug)
     //存储结果
     IDENT_INTERFACE res;
 	res.target = 1;
-    double x = double(src.rows) / 480; // 缩放比例
+    double x = double(src.rows) / 600; // 缩放比例
     
     //时间戳
 	typedef std::chrono::high_resolution_clock Clock;
@@ -1028,13 +1003,12 @@ IDENT_INTERFACE firstDetection(Mat src, bool debug)
 
     //塔检测 
 	auto t2 = Clock::now();
-    Mat src_harris;
-	src_harris = ImageHarris(src_re);
-	Region region_x, region_y;//x为区域横坐标 y为区域纵坐标
-	region_x = VerticalProjection(src_canny, src_harris);
-	region_y = HorizonProjection(src_canny, src_harris);
 
-    Region t = tower_detection(src, src_re, src_canny, src_harris, region_x, region_y);
+	Region region_x, region_y;//x为区域横坐标 y为区域纵坐标
+	region_x = VerticalProjection(src_canny);
+	region_y = HorizonProjection(src_canny);
+
+    Region t = tower_detection(src, src_re, src_canny, region_x, region_y);
     
     res.x = t.first * x;
     res.y = t.second * x;
@@ -1078,7 +1052,7 @@ IDENT_INTERFACE secondDetection(Mat src, bool debug)
     //存储结果
     IDENT_INTERFACE res;
 	res.target = 2;
-    double x = double(src.rows) / 480; // 缩放比例
+    double x = double(src.rows) / 600; // 缩放比例
 
     //时间戳
     typedef std::chrono::high_resolution_clock Clock;
@@ -1091,17 +1065,25 @@ IDENT_INTERFACE secondDetection(Mat src, bool debug)
 	Mat src_re = src;
 	src = ImageSplit(src);
     Mat src_canny = ImageCanny(src);
+
+
     //Mat src_tower = ImageSize(src, 1);
-    Mat src_harris = ImageHarris(src);
+     //auto t6 = Clock::now();
+    //Mat src_harris = ImageHarris(src);
+
+    //auto t5 = Clock::now();
+    //cout << "时间为：" << std::chrono::duration_cast<std::chrono::nanoseconds>(t5 - t6).count() / 1e+9 <<'\n';
+
     //Mat src_re_tower = ImageSize(src_re, 1);
     //Mat src_tower_canny = ImageSize(src_canny, 1);
 
+    auto t2 = Clock::now();
     Region region_x, region_y;
-	region_x = VerticalProjection(src_canny, src_harris);
-	region_y = HorizonProjection(src_canny, src_harris);
+	region_x = VerticalProjection(src_canny);
+	region_y = HorizonProjection(src_canny);
 
     //塔检测 
-    auto t2 = Clock::now();
+
     //Region t = tower_detection_two(src, src_re, src_canny, src_harris, region_x, region_y);
 
     //线
@@ -1135,6 +1117,8 @@ IDENT_INTERFACE secondDetection(Mat src, bool debug)
     if(debug)
     {
 
+        Rect rect(mid-15, 5, 30, src.rows);//左上坐标（x,y）和矩形的长(x)宽(y)
+        cv::rectangle(src_re, rect, Scalar(0, 0, 255), 3, LINE_8,0);
         string text = "angel: " + to_string(res.angel) + " x: " + to_string(res.x) + " y: " + to_string(res.y);
         putText(src_re, text, Point(10,50), FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 1, 8);
         
